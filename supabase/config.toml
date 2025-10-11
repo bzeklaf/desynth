@@ -1,0 +1,25 @@
+project_id = "fqvtrovbrjxbppdxnbfa"
+
+[functions.security-logger]
+verify_jwt = false
+
+[functions.send-notification-email]
+verify_jwt = false
+
+[functions.create-notification]
+verify_jwt = true
+
+[functions.blockchain-monitor]
+verify_jwt = false
+
+[functions.blockchain-service]
+verify_jwt = false
+
+[functions.create-payment-session]
+verify_jwt = true
+
+[functions.crypto-escrow]
+verify_jwt = true
+
+[functions.verify-payment]
+verify_jwt = false

@@ -1,0 +1,185 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* SIGNAL Design System - Professional prediction platform theme */
+
+@layer base {
+  :root {
+    /* Ultra dark theme base colors - matching SIGNAL aesthetic */
+    --background: 220 30% 4%;
+    --foreground: 0 0% 98%;
+
+    --card: 220 25% 8%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 220 25% 8%;
+    --popover-foreground: 0 0% 98%;
+
+    /* SIGNAL brand green - bright vibrant green */
+    --primary: 150 100% 50%;
+    --primary-foreground: 220 30% 4%;
+    --primary-glow: 150 100% 60%;
+
+    /* Secondary ultra dark */
+    --secondary: 220 20% 6%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 220 15% 10%;
+    --muted-foreground: 0 0% 65%;
+
+    /* Accent matches primary green */
+    --accent: 150 100% 50%;
+    --accent-foreground: 220 30% 4%;
+
+    --destructive: 0 85% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    /* Darker borders and inputs */
+    --border: 220 15% 15%;
+    --input: 220 20% 6%;
+    --ring: 150 100% 50%;
+
+    --radius: 0.5rem;
+
+    /* SIGNAL custom design tokens */
+    --success: 150 100% 50%;
+    --warning: 45 100% 55%;
+    --info: 200 100% 55%;
+    
+    /* SIGNAL gradients - vibrant green focus */
+    --gradient-primary: linear-gradient(135deg, hsl(150 100% 50%) 0%, hsl(150 100% 40%) 100%);
+    --gradient-card: linear-gradient(145deg, hsl(220 25% 8%) 0%, hsl(220 20% 6%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(220 30% 4%) 0%, hsl(220 25% 6%) 50%, hsl(220 30% 4%) 100%);
+    
+    /* Enhanced shadows with bright green glow */
+    --shadow-glow: 0 0 25px hsl(150 100% 50% / 0.4);
+    --shadow-card: 0 4px 20px hsl(220 30% 2% / 0.6);
+    --shadow-elegant: 0 8px 32px hsl(220 30% 2% / 0.8);
+    
+    /* Animations */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    /* Ultra dark theme - consistent with SIGNAL design */
+    --background: 220 30% 4%;
+    --foreground: 0 0% 98%;
+
+    --card: 220 25% 8%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 220 25% 8%;
+    --popover-foreground: 0 0% 98%;
+
+    /* SIGNAL bright green - consistent across themes */
+    --primary: 150 100% 50%;
+    --primary-foreground: 220 30% 4%;
+    --primary-glow: 150 100% 60%;
+
+    --secondary: 220 20% 6%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 220 15% 10%;
+    --muted-foreground: 0 0% 65%;
+
+    --accent: 150 100% 50%;
+    --accent-foreground: 220 30% 4%;
+
+    --destructive: 0 85% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 220 15% 15%;
+    --input: 220 20% 6%;
+    --ring: 150 100% 50%;
+    
+    --sidebar-background: 220 25% 8%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 150 100% 50%;
+    --sidebar-primary-foreground: 220 30% 4%;
+    --sidebar-accent: 220 20% 6%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 220 15% 15%;
+    --sidebar-ring: 150 100% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-medium;
+    background: var(--gradient-hero);
+    min-height: 100vh;
+  }
+}
+
+@layer components {
+  /* Custom component styles using design system */
+  .card-glow {
+    background: var(--gradient-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid hsl(var(--border));
+    transition: var(--transition-smooth);
+  }
+  
+  .card-glow:hover {
+    box-shadow: var(--shadow-glow);
+    transform: translateY(-2px);
+  }
+  
+  .btn-primary {
+    background: var(--gradient-primary);
+    color: hsl(var(--primary-foreground));
+    border: none;
+    box-shadow: var(--shadow-card);
+    transition: var(--transition-smooth);
+  }
+  
+  .btn-primary:hover {
+    box-shadow: var(--shadow-glow);
+    transform: translateY(-1px);
+  }
+  
+  .gradient-text {
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  .status-bullish {
+    @apply bg-success/20 text-success border-success/30;
+  }
+  
+  .status-bearish {
+    @apply bg-destructive/20 text-destructive border-destructive/30;
+  }
+
+  .status-warning {
+    @apply bg-warning/20 text-warning border-warning/30;
+  }
+
+  .status-info {
+    @apply bg-info/20 text-info border-info/30;
+  }
+}
