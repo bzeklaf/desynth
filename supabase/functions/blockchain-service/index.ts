@@ -20,12 +20,11 @@ const corsHeaders = {
 }
 
 interface BlockchainRequest {
-  action: 'create_escrow' | 'confirm_escrow' | 'mint_token' | 'release_escrow' | 'get_status'
+  action: 'create_escrow' | 'confirm_escrow' | 'release_escrow' | 'get_status'
   bookingId?: string
   amount?: string
   facilityAddress?: string
   txHash?: string
-  metadata?: any
 }
 
 serve(async (req) => {
@@ -44,7 +43,7 @@ serve(async (req) => {
       throw new AppError('RATE_LIMIT_EXCEEDED', 'Too many requests, please try again later', 429)
     }
 
-    const { action, bookingId, amount, facilityAddress, txHash, metadata }: BlockchainRequest = await req.json()
+    const { action, bookingId, amount, facilityAddress, txHash }: BlockchainRequest = await req.json()
     
     logger.info('Blockchain service request', { action, bookingId })
 
@@ -70,9 +69,6 @@ serve(async (req) => {
       
       case 'confirm_escrow':
         return await handleConfirmEscrow(supabase, txHash)
-      
-      case 'mint_token':
-        return await handleMintToken(supabase, bookingId, metadata)
       
       case 'release_escrow':
         return await handleReleaseEscrow(supabase, bookingId)
@@ -108,7 +104,7 @@ async function handleCreateEscrow(
 
   logger.info('Creating escrow', { bookingId, amount, facilityAddress })
 
-  // Check if booking exists and get fee breakdown
+  // Check if booking exists
   const { data: booking, error: bookingFetchError } = await supabase
     .from('bookings')
     .select('status, buyer_id, total_amount, fee_breakdown')
@@ -123,14 +119,11 @@ async function handleCreateEscrow(
     throw new AppError('INVALID_STATE', 'Booking is not in reserved state')
   }
 
-  // Calculate fee breakdown
-  const feeBreakdown = booking.fee_breakdown || {}
   const baseAmount = parseFloat(amount)
+  const feeBreakdown = booking.fee_breakdown || {}
   const totalFees = feeBreakdown.totalFees || 0
-  const facilityAmount = baseAmount // Facility gets the base amount
-  const platformFees = totalFees // Platform gets all fees
 
-  logger.info('Fee breakdown', { baseAmount, facilityAmount, platformFees, totalFees })
+  logger.info('Fee breakdown', { baseAmount, totalFees })
 
   // Update booking status
   const { error: bookingError } = await supabase
@@ -146,15 +139,15 @@ async function handleCreateEscrow(
     throw new AppError('DATABASE_ERROR', 'Failed to update booking status', 500)
   }
 
-  // Create escrow record with fee split
+  // Create escrow record
   const { error: escrowError } = await supabase
     .from('crypto_escrows')
     .insert({
       booking_id: bookingId,
-      amount: baseAmount + platformFees, // Total amount in escrow
+      amount: baseAmount,
       buyer_address: '0x0000000000000000000000000000000000000000',
       facility_address: facilityAddress,
-      token_address: '0x0000000000000000000000000000000000000000',
+      token_address: '0x0000000000000000000000000000000000000000', // ETH
       status: 'created',
       network: 'sepolia'
     })
@@ -164,7 +157,7 @@ async function handleCreateEscrow(
     throw new AppError('DATABASE_ERROR', 'Failed to create escrow record', 500)
   }
 
-  logger.info('Escrow created successfully', { bookingId, facilityAmount, platformFees })
+  logger.info('Escrow created successfully', { bookingId })
 
   return new Response(
     JSON.stringify({ 
@@ -172,9 +165,7 @@ async function handleCreateEscrow(
       message: 'Escrow created successfully',
       data: { 
         bookingId, 
-        totalAmount: baseAmount + platformFees,
-        facilityAmount,
-        platformFees,
+        totalAmount: baseAmount,
         facilityAddress 
       }
     }),
@@ -232,7 +223,7 @@ async function handleConfirmEscrow(supabase: any, txHash?: string) {
     .from('bookings')
     .update({ 
       status: 'confirmed',
-      payment_status: 'completed'
+      payment_status: 'paid'
     })
     .eq('id', escrowData.booking_id)
 
@@ -271,54 +262,12 @@ async function handleConfirmEscrow(supabase: any, txHash?: string) {
   )
 }
 
-async function handleMintToken(supabase: any, bookingId?: string, metadata?: any) {
-  if (!bookingId || !validateUUID(bookingId)) {
-    throw new AppError('INVALID_INPUT', 'Invalid booking ID')
-  }
-
-  logger.info('Minting token', { bookingId })
-
-  const { error } = await supabase
-    .from('bookings')
-    .update({ requires_tokenization: true })
-    .eq('id', bookingId)
-
-  if (error) {
-    logger.error('Failed to update tokenization', error)
-    throw new AppError('DATABASE_ERROR', 'Failed to update tokenization status', 500)
-  }
-
-  return new Response(
-    JSON.stringify({ 
-      success: true, 
-      message: 'Token minting initiated',
-      data: { bookingId }
-    }),
-    { 
-      status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-    }
-  )
-}
-
 async function handleReleaseEscrow(supabase: any, bookingId?: string) {
   if (!bookingId || !validateUUID(bookingId)) {
     throw new AppError('INVALID_INPUT', 'Invalid booking ID')
   }
 
   logger.info('Releasing escrow', { bookingId })
-
-  // Check audit status
-  const { data: attestations } = await supabase
-    .from('attestations')
-    .select('result')
-    .eq('booking_id', bookingId)
-
-  const hasPassedAudit = attestations?.some((att: any) => att.result === 'passed')
-  
-  if (!hasPassedAudit) {
-    throw new AppError('AUDIT_REQUIRED', 'Cannot release escrow: Audit not passed')
-  }
 
   // Update booking
   const { error: bookingError } = await supabase

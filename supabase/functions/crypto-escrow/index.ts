@@ -9,20 +9,17 @@ const corsHeaders = {
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-const alchemyApiKey = Deno.env.get('ALCHEMY_API_KEY')!;
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 interface EscrowOperation {
-  action: 'create' | 'fund' | 'release' | 'dispute' | 'resolve' | 'status';
+  action: 'create' | 'fund' | 'release' | 'status';
   bookingId: string;
   txHash?: string;
   buyerAddress?: string;
   facilityAddress?: string;
   amount?: string;
-  tokenAddress?: string;
   network?: string;
-  disputeWinner?: string;
 }
 
 serve(async (req) => {
@@ -32,25 +29,19 @@ serve(async (req) => {
   }
 
   try {
-    const { action, bookingId, txHash, buyerAddress, facilityAddress, amount, tokenAddress, network, disputeWinner }: EscrowOperation = await req.json();
+    const { action, bookingId, txHash, buyerAddress, facilityAddress, amount, network }: EscrowOperation = await req.json();
 
     console.log(`Processing escrow operation: ${action} for booking ${bookingId}`);
 
     switch (action) {
       case 'create':
-        return await createEscrow(bookingId, buyerAddress!, facilityAddress!, amount!, tokenAddress!, network!);
+        return await createEscrow(bookingId, buyerAddress!, facilityAddress!, amount!, network || 'sepolia');
       
       case 'fund':
         return await fundEscrow(bookingId, txHash!);
       
       case 'release':
         return await releaseEscrow(bookingId);
-      
-      case 'dispute':
-        return await disputeEscrow(bookingId);
-      
-      case 'resolve':
-        return await resolveDispute(bookingId, disputeWinner!);
       
       case 'status':
         return await getEscrowStatus(bookingId);
@@ -70,7 +61,7 @@ serve(async (req) => {
   }
 });
 
-async function createEscrow(bookingId: string, buyerAddress: string, facilityAddress: string, amount: string, tokenAddress: string, network: string) {
+async function createEscrow(bookingId: string, buyerAddress: string, facilityAddress: string, amount: string, network: string) {
   console.log(`Creating escrow for booking ${bookingId}`);
   
   // Insert escrow record into database
@@ -81,7 +72,7 @@ async function createEscrow(bookingId: string, buyerAddress: string, facilityAdd
       buyer_address: buyerAddress,
       facility_address: facilityAddress,
       amount: amount,
-      token_address: tokenAddress,
+      token_address: '0x0000000000000000000000000000000000000000', // ETH
       network: network,
       status: 'created',
       created_at: new Date().toISOString()
@@ -134,7 +125,7 @@ async function fundEscrow(bookingId: string, txHash: string) {
   await supabase
     .from('bookings')
     .update({
-      payment_status: 'completed',
+      payment_status: 'paid',
       status: 'confirmed'
     })
     .eq('id', bookingId);
@@ -150,9 +141,6 @@ async function fundEscrow(bookingId: string, txHash: string) {
       created_at: new Date().toISOString()
     });
 
-  // Mint slot NFT (placeholder - would call actual minting function)
-  await mintSlotNFT(bookingId);
-
   return new Response(JSON.stringify({ 
     success: true, 
     message: 'Escrow funded successfully',
@@ -165,13 +153,10 @@ async function fundEscrow(bookingId: string, txHash: string) {
 async function releaseEscrow(bookingId: string) {
   console.log(`Releasing escrow for booking ${bookingId}`);
   
-  // Check if booking is completed and audited
+  // Check if booking is completed
   const { data: booking, error: bookingError } = await supabase
     .from('bookings')
-    .select(`
-      *,
-      attestations (*)
-    `)
+    .select('*')
     .eq('id', bookingId)
     .single();
 
@@ -179,10 +164,8 @@ async function releaseEscrow(bookingId: string) {
     throw new Error('Booking not found');
   }
 
-  // Check if audit is passed
-  const hasPassedAudit = booking.attestations?.some((att: any) => att.result === 'passed');
-  if (!hasPassedAudit) {
-    throw new Error('Cannot release escrow: Audit not passed');
+  if (booking.status !== 'completed') {
+    throw new Error('Cannot release escrow: Booking not completed');
   }
 
   // Update escrow status
@@ -199,14 +182,14 @@ async function releaseEscrow(bookingId: string) {
     throw new Error('Failed to release escrow');
   }
 
-  // Create notification for facility
+  // Create notification
   await supabase
     .from('notifications')
     .insert({
-      user_id: booking.buyer_id, // Would need facility user ID
+      user_id: booking.buyer_id,
       type: 'payment',
       title: 'Escrow Released',
-      message: `Payment for booking ${bookingId} has been released to the facility.`,
+      message: `Payment for booking ${bookingId} has been released.`,
       urgent: false,
       read: false
     });
@@ -214,77 +197,6 @@ async function releaseEscrow(bookingId: string) {
   return new Response(JSON.stringify({ 
     success: true, 
     message: 'Escrow released successfully'
-  }), {
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-  });
-}
-
-async function disputeEscrow(bookingId: string) {
-  console.log(`Disputing escrow for booking ${bookingId}`);
-  
-  const { error } = await supabase
-    .from('crypto_escrows')
-    .update({
-      status: 'disputed',
-      disputed_at: new Date().toISOString()
-    })
-    .eq('booking_id', bookingId);
-
-  if (error) {
-    console.error('Error disputing escrow:', error);
-    throw new Error('Failed to dispute escrow');
-  }
-
-  // Create admin notification for dispute resolution
-  const { data: adminUsers } = await supabase
-    .from('profiles')
-    .select('user_id')
-    .eq('role', 'admin');
-
-  if (adminUsers) {
-    for (const admin of adminUsers) {
-      await supabase
-        .from('notifications')
-        .insert({
-          user_id: admin.user_id,
-          type: 'dispute',
-          title: 'Escrow Dispute Created',
-          message: `Booking ${bookingId} has been disputed and requires admin resolution.`,
-          urgent: true,
-          read: false
-        });
-    }
-  }
-
-  return new Response(JSON.stringify({ 
-    success: true, 
-    message: 'Escrow disputed successfully'
-  }), {
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-  });
-}
-
-async function resolveDispute(bookingId: string, winner: string) {
-  console.log(`Resolving dispute for booking ${bookingId} in favor of ${winner}`);
-  
-  const { error } = await supabase
-    .from('crypto_escrows')
-    .update({
-      status: 'resolved',
-      dispute_winner: winner,
-      resolved_at: new Date().toISOString()
-    })
-    .eq('booking_id', bookingId);
-
-  if (error) {
-    console.error('Error resolving dispute:', error);
-    throw new Error('Failed to resolve dispute');
-  }
-
-  return new Response(JSON.stringify({ 
-    success: true, 
-    message: 'Dispute resolved successfully',
-    winner: winner
   }), {
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   });
@@ -308,48 +220,4 @@ async function getEscrowStatus(bookingId: string) {
   }), {
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   });
-}
-
-async function mintSlotNFT(bookingId: string) {
-  console.log(`Minting slot NFT for booking ${bookingId}`);
-  
-  // Get booking details
-  const { data: booking } = await supabase
-    .from('bookings')
-    .select(`
-      *,
-      slots (
-        title,
-        equipment,
-        facilities (name, location)
-      )
-    `)
-    .eq('id', bookingId)
-    .single();
-
-  if (booking) {
-    // Create NFT metadata
-    const metadata = {
-      name: `DeSynth Slot: ${booking.slots?.title}`,
-      description: `Biomanufacturing slot booking NFT for ${booking.slots?.title} at ${booking.slots?.facilities?.name}`,
-      attributes: [
-        { trait_type: "Facility", value: booking.slots?.facilities?.name },
-        { trait_type: "Location", value: booking.slots?.facilities?.location },
-        { trait_type: "Equipment", value: booking.slots?.equipment },
-        { trait_type: "Booking Date", value: new Date(booking.created_at).toISOString() }
-      ]
-    };
-
-    // Store NFT data (in real implementation, would interact with smart contract)
-    await supabase
-      .from('slot_nfts')
-      .insert({
-        booking_id: bookingId,
-        owner_address: booking.buyer_id, // Would be buyer's wallet address
-        metadata: JSON.stringify(metadata),
-        minted_at: new Date().toISOString()
-      });
-
-    console.log('Slot NFT minted successfully');
-  }
 }
