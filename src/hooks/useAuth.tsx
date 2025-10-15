@@ -122,7 +122,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         .eq('user_id', userId)
         .single();
 
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.error('Profile not found:', profileError);
+        // Profile doesn't exist - sign out the user
+        await supabase.auth.signOut();
+        setUser(null);
+        setSession(null);
+        setProfile(null);
+        toast({
+          title: "Account Error",
+          description: "Your profile data is missing. Please sign up again.",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
 
       // Fetch user role from secure user_roles table
       const { data: roleData, error: roleError } = await supabase
@@ -140,6 +154,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
     } catch (error) {
       console.error('Error fetching profile:', error);
+      // On any error, sign out to prevent infinite loading
+      await supabase.auth.signOut();
+      setUser(null);
+      setSession(null);
+      setProfile(null);
+      toast({
+        title: "Authentication Error",
+        description: "There was a problem loading your profile. Please sign in again.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
