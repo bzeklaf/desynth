@@ -84,59 +84,13 @@ export const BuyerDashboard = () => {
   };
 
   const fetchClaims = async () => {
-    if (!user) return;
-    
-    try {
-      const { data, error } = await supabase
-        .from('claims')
-        .select(`
-          *,
-          bookings (
-            slots (
-              title,
-              facilities (
-                name
-              )
-            )
-          )
-        `)
-        .eq('owner_id', user.id)
-        .eq('status', 'active');
-
-      if (error) throw error;
-      setClaims(data || []);
-    } catch (error) {
-      console.error('Error fetching claims:', error);
-    }
+    // Claims feature removed - keeping empty for future implementation
+    setClaims([]);
   };
 
   const fetchResaleListings = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('resale_listings')
-        .select(`
-          *,
-          claims (
-            bookings (
-              slots (
-                title,
-                facilities (
-                  name,
-                  reputation_score
-                )
-              )
-            )
-          )
-        `)
-        .eq('status', 'active')
-        .order('created_at', { ascending: false })
-        .limit(10);
-
-      if (error) throw error;
-      setResaleListings(data || []);
-    } catch (error) {
-      console.error('Error fetching resale listings:', error);
-    }
+    // Resale marketplace removed - keeping empty for future implementation
+    setResaleListings([]);
   };
 
   return (
