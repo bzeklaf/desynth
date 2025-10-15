@@ -25,33 +25,37 @@ export const Auth = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    const formData = new FormData(e.currentTarget);
-    const email = formData.get('email') as string;
-    const password = formData.get('password') as string;
+    try {
+      const formData = new FormData(e.currentTarget);
+      const email = formData.get('email') as string;
+      const password = formData.get('password') as string;
 
-    const { error } = await signIn(email, password);
-    
-    if (!error) {
-      navigate('/dashboard');
+      const { error } = await signIn(email, password);
+      
+      if (!error) {
+        navigate('/dashboard');
+      }
+    } finally {
+      setIsLoading(false);
     }
-    
-    setIsLoading(false);
   };
 
   const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
 
-    const formData = new FormData(e.currentTarget);
-    const email = formData.get('email') as string;
-    const password = formData.get('password') as string;
-    const firstName = formData.get('firstName') as string;
-    const lastName = formData.get('lastName') as string;
-    const role = formData.get('role') as string;
+    try {
+      const formData = new FormData(e.currentTarget);
+      const email = formData.get('email') as string;
+      const password = formData.get('password') as string;
+      const firstName = formData.get('firstName') as string;
+      const lastName = formData.get('lastName') as string;
+      const role = formData.get('role') as string;
 
-    const { error } = await signUp(email, password, firstName, lastName, role);
-    
-    setIsLoading(false);
+      await signUp(email, password, firstName, lastName, role);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
