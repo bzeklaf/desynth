@@ -172,7 +172,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signUp = async (email: string, password: string, firstName?: string, lastName?: string, role?: string) => {
     const redirectUrl = `${window.location.origin}/`;
     
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -191,6 +191,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         description: error.message,
         variant: "destructive",
       });
+    } else if (data.user && !data.session && data.user.identities?.length === 0) {
+      // User already exists - Supabase doesn't send confirmation email for existing users
+      toast({
+        title: "Account Already Exists",
+        description: "This email is already registered. Please sign in or contact support if you need to reset your password.",
+        variant: "destructive",
+      });
+      return { error: new Error("User already exists") };
     } else {
       toast({
         title: "Check your email",
