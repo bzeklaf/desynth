@@ -5,7 +5,6 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CryptoPaymentOption } from './CryptoPaymentOption';
 import { EscrowManager } from './EscrowManager';
-import { InsuranceManager } from './InsuranceManager';
 import { useAuth } from '@/hooks/useAuth';
 import { 
   CreditCard,
@@ -91,7 +90,7 @@ export const CryptoBookingFlow = ({
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="payment" className="flex items-center gap-2">
               <CreditCard className="w-4 h-4" />
               Payment
@@ -99,10 +98,6 @@ export const CryptoBookingFlow = ({
             <TabsTrigger value="escrow" disabled={!paymentCompleted} className="flex items-center gap-2">
               <Shield className="w-4 h-4" />
               Escrow
-            </TabsTrigger>
-            <TabsTrigger value="insurance" className="flex items-center gap-2">
-              <Shield className="w-4 h-4" />
-              Insurance
             </TabsTrigger>
             <TabsTrigger value="documents" disabled={!paymentCompleted} className="flex items-center gap-2">
               <FileText className="w-4 h-4" />
@@ -166,14 +161,6 @@ export const CryptoBookingFlow = ({
           <TabsContent value="escrow" className="space-y-6">
             <EscrowManager 
               bookingId={bookingId} 
-              userRole={profile?.role as any}
-            />
-          </TabsContent>
-
-          <TabsContent value="insurance" className="space-y-6">
-            <InsuranceManager 
-              bookingId={bookingId}
-              bookingAmount={slotData?.price || 0}
               userRole={profile?.role as any}
             />
           </TabsContent>

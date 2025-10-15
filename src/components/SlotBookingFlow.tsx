@@ -115,8 +115,6 @@ export const SlotBookingFlow = ({ slotId, slotData, onClose }: SlotBookingFlowPr
         facilityType: booking.facility_type,
         transactionSize: baseAmount,
         isPriority: booking.is_priority,
-        requiresTokenization: booking.requires_tokenization,
-        requiresInsurance: booking.requires_insurance,
         paymentMethod: booking.payment_method
       };
       
