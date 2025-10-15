@@ -747,6 +747,53 @@ export type Database = {
           },
         ]
       }
+      nft_marketplace_listings: {
+        Row: {
+          buyer_id: string | null
+          created_at: string
+          id: string
+          nft_id: string
+          price: number
+          seller_id: string
+          sold_at: string | null
+          status: string
+          token_address: string
+          updated_at: string
+        }
+        Insert: {
+          buyer_id?: string | null
+          created_at?: string
+          id?: string
+          nft_id: string
+          price: number
+          seller_id: string
+          sold_at?: string | null
+          status?: string
+          token_address?: string
+          updated_at?: string
+        }
+        Update: {
+          buyer_id?: string | null
+          created_at?: string
+          id?: string
+          nft_id?: string
+          price?: number
+          seller_id?: string
+          sold_at?: string | null
+          status?: string
+          token_address?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nft_marketplace_listings_nft_id_fkey"
+            columns: ["nft_id"]
+            isOneToOne: false
+            referencedRelation: "slot_nfts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           action_url: string | null
