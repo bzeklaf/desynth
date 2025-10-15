@@ -11,7 +11,7 @@ import { LogIn, UserPlus, Building, ShoppingCart, Shield, Settings } from 'lucid
 
 export const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const { signIn, signUp, user, profile, loading } = useAuth();
+  const { signIn, signUp, user, profile, loading, resendVerification, resetPassword } = useAuth();
   const navigate = useNavigate();
 
   // Don't redirect while still loading - wait for profile to be loaded
@@ -53,6 +53,29 @@ export const Auth = () => {
       const role = formData.get('role') as string;
 
       await signUp(email, password, firstName, lastName, role);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResend = async (source: 'signin' | 'signup') => {
+    const inputId = source === 'signin' ? 'signin-email' : 'signup-email';
+    const email = (document.getElementById(inputId) as HTMLInputElement)?.value;
+    if (!email) return;
+    setIsLoading(true);
+    try {
+      await resendVerification(email);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResetPassword = async () => {
+    const email = (document.getElementById('signin-email') as HTMLInputElement)?.value;
+    if (!email) return;
+    setIsLoading(true);
+    try {
+      await resetPassword(email);
     } finally {
       setIsLoading(false);
     }
@@ -121,6 +144,14 @@ export const Auth = () => {
                   <Button type="submit" className="w-full" disabled={isLoading}>
                     {isLoading ? "Signing in..." : "Sign In"}
                   </Button>
+                  <div className="flex items-center justify-between mt-2">
+                    <Button type="button" variant="link" className="px-0" onClick={() => handleResend('signin')}>
+                      Resend verification email
+                    </Button>
+                    <Button type="button" variant="link" className="px-0" onClick={handleResetPassword}>
+                      Forgot password?
+                    </Button>
+                  </div>
                 </form>
               </CardContent>
             </Card>
@@ -207,6 +238,11 @@ export const Auth = () => {
                   <Button type="submit" className="w-full" disabled={isLoading}>
                     {isLoading ? "Creating account..." : "Sign Up"}
                   </Button>
+                  <div className="text-center mt-2">
+                    <Button type="button" variant="link" className="px-0" onClick={() => handleResend('signup')}>
+                      Didn't get the email? Resend verification
+                    </Button>
+                  </div>
                 </form>
               </CardContent>
             </Card>
