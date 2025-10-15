@@ -36,8 +36,8 @@ export const Market = () => {
       id: '2',
       title: 'Cell Therapy Manufacturing',
       facility: 'GenCell Facility',
-        originalPrice: 0.01, // 0.01 ETH
-        currentPrice: 0.009, // 0.009 ETH
+      originalPrice: 24000,
+      currentPrice: 21600,
       discount: 10,
       rating: 4.7,
       timeLeft: '1 day',
@@ -109,7 +109,7 @@ export const Market = () => {
             </div>
             <div>
               <h1 className="text-3xl font-bold">Secondary Market</h1>
-              <p className="text-muted-foreground">Trade claims and discover pricing trends</p>
+              <p className="text-muted-foreground">Trade slot claims and discover pricing trends</p>
             </div>
           </div>
 
@@ -232,7 +232,7 @@ export const Market = () => {
                     <div className="flex gap-2">
                       <Button variant="premium" className="flex-1">
                         <Lock className="w-4 h-4 mr-2" />
-                        Purchase Claim
+                        Purchase Slot
                       </Button>
                       <Button variant="outline">
                         <Eye className="w-4 h-4 mr-2" />

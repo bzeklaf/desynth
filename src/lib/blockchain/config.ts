@@ -8,14 +8,8 @@ export const blockchainConfig = getDefaultConfig({
   ssr: false,
 });
 
-// Contract addresses for Sepolia testnet
-export const CONTRACT_ADDRESSES = {
-  ESCROW: '0x742d35Cc6634C0532925a3b8D30a5f7B5d6e8C29', // Deploy your escrow contract here  
-  SLOT_TOKENS: '0x8C5AE1e7CA6C9c0E1b6F0D2E3B4A5F6C7D8E9F10', // Deploy your slot tokens contract here
-  INSURANCE_POOL: '0x9D6B1F2E8A5C4D3B2A9F8E7D6C5B4A3E2D1C0B9A', // Deploy your insurance pool here
-  // Native ETH doesn't need an address, represented as zero address
-  ETH: '0x0000000000000000000000000000000000000000',
-};
+// Simple escrow wallet address for Sepolia testnet
+export const ESCROW_WALLET_ADDRESS = '0xf2664dBc523ac59892bCFdFF99E184f5372cc5Bc'; // Escrow wallet address
 
 // Fee collection wallets - all set to platform wallet for testing
 // Replace with actual wallets for production
