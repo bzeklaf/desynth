@@ -42,14 +42,8 @@ export const EscrowManager = ({ bookingId, userRole = 'buyer' }: EscrowManagerPr
   const fetchEscrowData = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('crypto_escrows')
-        .select('*')
-        .eq('booking_id', bookingId)
-        .maybeSingle();
-
-      if (error) throw error;
-      setEscrowData(data);
+      // TODO: Create crypto_escrows table  
+      setEscrowData(null);
     } catch (error) {
       console.error('Error fetching escrow:', error);
     } finally {

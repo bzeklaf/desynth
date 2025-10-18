@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ChatSystem } from '@/components/ChatSystem';
+// import { ChatSystem } from '@/components/ChatSystem'; // TODO: Create chat_channels and chat_messages tables
 import { MessageCircle, X } from 'lucide-react';
 
 export const FloatingChat = () => {
   const [isOpen, setIsOpen] = useState(false);
+
+  // Temporarily disabled until chat tables are created
+  return null;
 
   return (
     <>
@@ -18,14 +21,14 @@ export const FloatingChat = () => {
         </Button>
       </div>
 
-      {/* Chat System Modal */}
-      {isOpen && (
+      {/* Chat System Modal - Temporarily disabled */}
+      {/* {isOpen && (
         <div className="fixed inset-0 z-40 flex items-end justify-end p-6">
           <div className="w-full max-w-md">
             <ChatSystem isOpen={isOpen} onClose={() => setIsOpen(false)} />
           </div>
         </div>
-      )}
+      )} */}
     </>
   );
 };

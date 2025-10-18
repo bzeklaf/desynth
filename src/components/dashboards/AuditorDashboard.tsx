@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Navigation } from '@/components/Navigation';
-import { AuditingSystem } from '@/components/AuditingSystem';
+// import { AuditingSystem } from '@/components/AuditingSystem'; // TODO: Create audit tables
 import { FloatingChat } from '@/components/FloatingChat';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -75,29 +75,30 @@ export const AuditorDashboard = () => {
 
   const fetchCompletedAudits = async () => {
     try {
-      const { data, error } = await supabase
-        .from('attestations')
-        .select(`
-          *,
-          bookings (
-            *,
-            slots (
-              title,
-              facilities (
-                name
-              )
-            ),
-            profiles:buyer_id (
-              first_name,
-              last_name
-            )
-          )
-        `)
-        .eq('auditor_id', user?.id)
-        .order('created_at', { ascending: false });
+      // TODO: Create attestations table
+      // const { data, error } = await supabase
+      //   .from('attestations')
+      //   .select(`
+      //     *,
+      //     bookings (
+      //       *,
+      //       slots (
+      //         title,
+      //         facilities (
+      //           name
+      //         )
+      //       ),
+      //       profiles:buyer_id (
+      //         first_name,
+      //         last_name
+      //       )
+      //     )
+      //   `)
+      //   .eq('auditor_id', user?.id)
+      //   .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setCompletedAudits(data || []);
+      // if (error) throw error;
+      setCompletedAudits([]);
     } catch (error) {
       console.error('Error fetching completed audits:', error);
     }
@@ -108,22 +109,24 @@ export const AuditorDashboard = () => {
     
     try {
       setLoading(true);
-      const { error } = await supabase
-        .from('attestations')
-        .insert({
-          booking_id: bookingId,
-          auditor_id: user.id,
-          result: result,
-          notes: notes || '',
-          auditor_sign_off: true,
-          created_at: new Date().toISOString(),
-        });
+      // TODO: Create attestations table
+      // const { error } = await supabase
+      //   .from('attestations')
+      //   .insert({
+      //     booking_id: bookingId,
+      //     auditor_id: user.id,
+      //     result: result,
+      //     notes: notes || '',
+      //     auditor_sign_off: true,
+      //     created_at: new Date().toISOString(),
+      //   });
 
-      if (error) throw error;
+      // if (error) throw error;
 
       toast({
-        title: "Audit completed",
-        description: `Booking has been marked as ${result}.`,
+        title: "Audit feature unavailable",
+        description: "Attestations table needs to be created first.",
+        variant: "destructive"
       });
 
       // Refresh both lists

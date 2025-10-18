@@ -62,14 +62,15 @@ export const UserProfile = () => {
         .select('*')
         .eq('buyer_id', user.id);
 
-      const { data: transactions } = await supabase
-        .from('transactions')
-        .select('amount')
-        .eq('payer_id', user.id);
+      // TODO: Create transactions table
+      // const { data: transactions } = await supabase
+      //   .from('transactions')
+      //   .select('amount')
+      //   .eq('payer_id', user.id);
 
       const totalBookings = bookings?.length || 0;
       const completedRuns = bookings?.filter(b => b.status === 'completed').length || 0;
-      const totalSpent = transactions?.reduce((sum, t) => sum + Number(t.amount), 0) || 0;
+      const totalSpent = bookings?.reduce((sum, b) => sum + Number(b.total_amount), 0) || 0;
 
       setStats({
         totalBookings,

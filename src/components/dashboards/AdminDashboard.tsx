@@ -3,7 +3,7 @@ import { Navigation } from '@/components/Navigation';
 import AnalyticsDashboard from '@/components/AnalyticsDashboard';
 import PaymentProcessor from '@/components/PaymentProcessor';
 import { RealTimeActivityFeed } from '@/components/RealTimeActivityFeed';
-import { ActivityFeedReal } from '@/components/ActivityFeedReal';
+// import { ActivityFeedReal } from '@/components/ActivityFeedReal'; // TODO: Fix foreign key relations
 import { AdminSystemMonitor } from '@/components/AdminSystemMonitor';
 import { RevenueSettings } from '@/components/RevenueSettings';
 import { FloatingChat } from '@/components/FloatingChat';
@@ -74,7 +74,7 @@ export const AdminDashboard = () => {
       const { error } = await supabase
         .from('facilities')
         .update({ 
-          status: action === 'approve' ? 'approved' : 'rejected' 
+          status: action === 'approve' ? 'approved' : 'suspended' 
         })
         .eq('id', facilityId);
 
@@ -420,7 +420,14 @@ export const AdminDashboard = () => {
                 </CardContent>
               </Card>
 
-              <ActivityFeedReal />
+              {/* TODO: Re-enable once database relations are fixed */}
+              {/* <ActivityFeedReal /> */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Activity Feed</CardTitle>
+                  <CardDescription>Activity feed temporarily disabled - database tables need to be created</CardDescription>
+                </CardHeader>
+              </Card>
             </div>
           </TabsContent>
 

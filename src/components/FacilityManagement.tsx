@@ -63,7 +63,7 @@ interface Booking {
   buyer_id: string;
   buyer_name: string;
   total_amount: number;
-  status: 'reserved' | 'in_progress' | 'completed' | 'cancelled' | 'disputed';
+  status: 'reserved' | 'in_progress' | 'completed' | 'cancelled';
   payment_status: string;
   created_at: string;
 }
@@ -191,7 +191,7 @@ export const FacilityManagement = () => {
     }
   };
 
-  const updateBookingStatus = async (bookingId: string, status: 'reserved' | 'in_progress' | 'completed' | 'cancelled' | 'disputed') => {
+  const updateBookingStatus = async (bookingId: string, status: 'reserved' | 'in_progress' | 'completed' | 'cancelled') => {
     try {
       const { error } = await supabase
         .from('bookings')
@@ -222,8 +222,7 @@ export const FacilityManagement = () => {
       in_progress: { variant: 'default' as const, color: 'text-yellow-600' },
       completed: { variant: 'default' as const, color: 'text-green-600' },
       reserved: { variant: 'outline' as const, color: 'text-orange-600' },
-      cancelled: { variant: 'destructive' as const, color: 'text-red-600' },
-      disputed: { variant: 'destructive' as const, color: 'text-red-600' }
+      cancelled: { variant: 'destructive' as const, color: 'text-red-600' }
     };
     
     const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.available;
@@ -338,7 +337,7 @@ export const FacilityManagement = () => {
                       {getStatusBadge(booking.status)}
                       <Select
                         value={booking.status}
-                        onValueChange={(value) => updateBookingStatus(booking.id, value as 'reserved' | 'in_progress' | 'completed' | 'cancelled' | 'disputed')}
+                        onValueChange={(value) => updateBookingStatus(booking.id, value as 'reserved' | 'in_progress' | 'completed' | 'cancelled')}
                       >
                         <SelectTrigger className="w-32">
                           <SelectValue />

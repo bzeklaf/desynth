@@ -166,7 +166,7 @@ export const SlotBrowser = () => {
         .gte('start_date', new Date().toISOString());
 
       if (complianceFilter !== 'all') {
-        query = query.eq('compliance_level', complianceFilter as 'gmp' | 'rd' | 'gcp');
+        query = query.eq('compliance_level', complianceFilter as 'basic' | 'gmp' | 'fda' | 'iso');
       }
 
       const { data, error } = await query;

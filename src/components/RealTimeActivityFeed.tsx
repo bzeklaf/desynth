@@ -53,7 +53,7 @@ export const RealTimeActivityFeed = () => {
     try {
       setLoading(true);
       
-      // Fetch recent bookings
+      // Fetch recent bookings - Note: buyer profile relation not configured yet
       const { data: bookings } = await supabase
         .from('bookings')
         .select(`
@@ -63,10 +63,6 @@ export const RealTimeActivityFeed = () => {
             facilities (
               name
             )
-          ),
-          profiles:buyer_id (
-            first_name,
-            last_name
           )
         `)
         .order('created_at', { ascending: false })
@@ -90,9 +86,7 @@ export const RealTimeActivityFeed = () => {
 
       // Process bookings
       bookings?.forEach((booking) => {
-        const userName = booking.profiles ? 
-          `${booking.profiles.first_name} ${booking.profiles.last_name}` : 
-          'Unknown User';
+        const userName = 'User'; // TODO: Add foreign key for buyer_id to profiles
         
         activityItems.push({
           id: `booking-${booking.id}`,
