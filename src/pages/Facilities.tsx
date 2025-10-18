@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Navigation } from '@/components/Navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { 
@@ -38,7 +40,9 @@ export const Facilities = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [locationFilter, setLocationFilter] = useState('');
   const [certificationFilter, setCertificationFilter] = useState('all');
+  const [selectedFacility, setSelectedFacility] = useState<Facility | null>(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchFacilities();
@@ -289,11 +293,17 @@ export const Facilities = () => {
                   )}
 
                   <div className="flex gap-2">
-                    <Button className="flex-1">
+                    <Button 
+                      className="flex-1" 
+                      onClick={() => navigate(`/browse?facility=${facility.id}`)}
+                    >
                       <Calendar className="w-4 h-4 mr-2" />
                       View Available Slots
                     </Button>
-                    <Button variant="outline">
+                    <Button 
+                      variant="outline"
+                      onClick={() => setSelectedFacility(facility)}
+                    >
                       <Eye className="w-4 h-4 mr-2" />
                       View Profile
                     </Button>
@@ -304,6 +314,110 @@ export const Facilities = () => {
           )}
         </div>
       </main>
+
+      {/* Facility Profile Dialog */}
+      <Dialog open={selectedFacility !== null} onOpenChange={() => setSelectedFacility(null)}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          {selectedFacility && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-2xl">{selectedFacility.name}</DialogTitle>
+                <DialogDescription className="flex items-center gap-2">
+                  <MapPin className="w-4 h-4" />
+                  {selectedFacility.location}
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-6 mt-4">
+                {/* Reputation Score */}
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <Star className="w-6 h-6 fill-yellow-400 text-yellow-400" />
+                    <span className="text-2xl font-bold">{selectedFacility.reputation_score.toFixed(1)}</span>
+                  </div>
+                  <Badge variant="outline" className="bg-primary/10">
+                    Verified Facility
+                  </Badge>
+                </div>
+
+                {/* Description */}
+                {selectedFacility.description && (
+                  <div>
+                    <h3 className="font-semibold mb-2">About</h3>
+                    <p className="text-muted-foreground">{selectedFacility.description}</p>
+                  </div>
+                )}
+
+                {/* Performance Metrics */}
+                <div>
+                  <h3 className="font-semibold mb-3">Performance Metrics</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <Card>
+                      <CardContent className="p-4">
+                        <div className="text-muted-foreground text-sm mb-1">On-Time Delivery</div>
+                        <div className="text-2xl font-bold text-primary">{selectedFacility.on_time_percentage}%</div>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="p-4">
+                        <div className="text-muted-foreground text-sm mb-1">QA Pass Rate</div>
+                        <div className="text-2xl font-bold text-primary">{selectedFacility.qa_pass_rate}%</div>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="p-4">
+                        <div className="text-muted-foreground text-sm mb-1">Cancellation Rate</div>
+                        <div className="text-2xl font-bold text-primary">{selectedFacility.cancellation_rate}%</div>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="p-4">
+                        <div className="text-muted-foreground text-sm mb-1">Reputation</div>
+                        <div className="text-2xl font-bold text-primary">{selectedFacility.reputation_score.toFixed(2)}</div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+
+                {/* Certifications */}
+                {selectedFacility.certifications && selectedFacility.certifications.length > 0 && (
+                  <div>
+                    <h3 className="font-semibold mb-3">Certifications</h3>
+                    <div className="flex gap-2 flex-wrap">
+                      {selectedFacility.certifications.map((cert, index) => (
+                        <Badge key={index} variant="outline" className="bg-primary/5">
+                          <Award className="w-3 h-3 mr-1" />
+                          {cert}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Actions */}
+                <div className="flex gap-2 pt-4 border-t">
+                  <Button 
+                    className="flex-1"
+                    onClick={() => {
+                      navigate(`/browse?facility=${selectedFacility.id}`);
+                      setSelectedFacility(null);
+                    }}
+                  >
+                    <Calendar className="w-4 h-4 mr-2" />
+                    View Available Slots
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    onClick={() => setSelectedFacility(null)}
+                  >
+                    Close
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
