@@ -131,7 +131,15 @@ export type Database = {
           status?: Database["public"]["Enums"]["facility_status"] | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "facilities_owner_user_id_fkey"
+            columns: ["owner_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       notifications: {
         Row: {
