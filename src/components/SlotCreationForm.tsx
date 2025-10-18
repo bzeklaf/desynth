@@ -144,7 +144,7 @@ export const SlotCreationForm = ({ onSlotCreated }: SlotCreationFormProps) => {
           description: formData.description || null,
           equipment: formData.equipment,
           scale_capacity: formData.scale_capacity || null,
-          compliance_level: formData.compliance_level as 'gmp' | 'rd' | 'gcp',
+          compliance_level: formData.compliance_level as 'basic' | 'gmp' | 'fda' | 'iso',
           start_date: formData.start_date,
           end_date: formData.end_date,
           duration_hours: duration,
@@ -229,9 +229,10 @@ export const SlotCreationForm = ({ onSlotCreated }: SlotCreationFormProps) => {
                   <SelectValue placeholder="Select compliance level" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="basic">Basic</SelectItem>
                   <SelectItem value="gmp">GMP (Good Manufacturing Practice)</SelectItem>
-                  <SelectItem value="rd">R&D (Research & Development)</SelectItem>
-                  <SelectItem value="gcp">GCP (Good Clinical Practice)</SelectItem>
+                  <SelectItem value="fda">FDA Approved</SelectItem>
+                  <SelectItem value="iso">ISO Certified</SelectItem>
                 </SelectContent>
               </Select>
             </div>
