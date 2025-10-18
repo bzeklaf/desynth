@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,6 +11,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { CalendarIcon, Clock, DollarSign, Plus } from 'lucide-react';
 
 interface SlotFormData {
+  facility_id: string;
   title: string;
   description: string;
   equipment: string;
@@ -23,12 +24,20 @@ interface SlotFormData {
   qa_deliverables: string;
 }
 
+interface Facility {
+  id: string;
+  name: string;
+  location: string;
+  status: string;
+}
+
 interface SlotCreationFormProps {
   onSlotCreated?: () => void;
 }
 
 export const SlotCreationForm = ({ onSlotCreated }: SlotCreationFormProps) => {
   const [formData, setFormData] = useState<SlotFormData>({
+    facility_id: '',
     title: '',
     description: '',
     equipment: '',
@@ -40,9 +49,41 @@ export const SlotCreationForm = ({ onSlotCreated }: SlotCreationFormProps) => {
     cancellation_policy: '',
     qa_deliverables: ''
   });
+  const [facilities, setFacilities] = useState<Facility[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingFacilities, setLoadingFacilities] = useState(true);
   const { toast } = useToast();
   const { user, profile } = useAuth();
+
+  useEffect(() => {
+    const fetchFacilities = async () => {
+      if (!user) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('facilities')
+          .select('id, name, location, status')
+          .eq('owner_user_id', user.id)
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        
+        setFacilities(data || []);
+        
+        // Auto-select first approved facility
+        const approvedFacility = data?.find(f => f.status === 'approved');
+        if (approvedFacility && !formData.facility_id) {
+          setFormData(prev => ({ ...prev, facility_id: approvedFacility.id }));
+        }
+      } catch (error) {
+        console.error('Error fetching facilities:', error);
+      } finally {
+        setLoadingFacilities(false);
+      }
+    };
+
+    fetchFacilities();
+  }, [user]);
 
   const handleInputChange = (field: keyof SlotFormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -81,11 +122,22 @@ export const SlotCreationForm = ({ onSlotCreated }: SlotCreationFormProps) => {
     }
 
     // Validation
-    if (!formData.title || !formData.equipment || !formData.compliance_level || 
-        !formData.start_date || !formData.end_date || !formData.price) {
+    if (!formData.facility_id || !formData.title || !formData.equipment || 
+        !formData.compliance_level || !formData.start_date || !formData.end_date || !formData.price) {
       toast({
         title: "Missing information",
-        description: "Please fill in all required fields.",
+        description: "Please fill in all required fields, including facility selection.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Verify selected facility is approved
+    const selectedFacility = facilities.find(f => f.id === formData.facility_id);
+    if (selectedFacility?.status !== 'approved') {
+      toast({
+        title: "Facility not approved",
+        description: "You can only create slots for approved facilities.",
         variant: "destructive",
       });
       return;
@@ -115,31 +167,12 @@ export const SlotCreationForm = ({ onSlotCreated }: SlotCreationFormProps) => {
     try {
       setLoading(true);
 
-      // First, get the facility ID for this user
-      const { data: facilities, error: facilityError } = await supabase
-        .from('facilities')
-        .select('id')
-        .eq('owner_user_id', user.id)
-        .limit(1);
-
-      if (facilityError) throw facilityError;
-
-      if (!facilities || facilities.length === 0) {
-        toast({
-          title: "No facility found",
-          description: "Please create a facility profile first.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const facilityId = facilities[0].id;
       const duration = calculateDuration();
 
       const { error } = await supabase
         .from('slots')
         .insert({
-          facility_id: facilityId,
+          facility_id: formData.facility_id,
           title: formData.title,
           description: formData.description || null,
           equipment: formData.equipment,
@@ -161,8 +194,9 @@ export const SlotCreationForm = ({ onSlotCreated }: SlotCreationFormProps) => {
         description: "Your slot is now available for booking.",
       });
 
-      // Reset form
+      // Reset form but keep facility selection
       setFormData({
+        facility_id: formData.facility_id,
         title: '',
         description: '',
         equipment: '',
@@ -199,9 +233,45 @@ export const SlotCreationForm = ({ onSlotCreated }: SlotCreationFormProps) => {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Label htmlFor="title">Slot Title *</Label>
+          {loadingFacilities ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+              <p className="text-sm text-muted-foreground mt-2">Loading facilities...</p>
+            </div>
+          ) : facilities.length === 0 ? (
+            <div className="bg-muted/30 p-6 rounded-lg text-center">
+              <p className="text-muted-foreground mb-4">
+                You need to register a facility before creating slots.
+              </p>
+              <Button type="button" onClick={() => window.location.href = '/profile'}>
+                Register Facility
+              </Button>
+            </div>
+          ) : (
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="facility">Select Facility *</Label>
+                <Select value={formData.facility_id} onValueChange={(value) => handleInputChange('facility_id', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choose a facility" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {facilities.map((facility) => (
+                      <SelectItem key={facility.id} value={facility.id} disabled={facility.status !== 'approved'}>
+                        {facility.name} - {facility.location}
+                        {facility.status !== 'approved' && ` (${facility.status})`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {formData.facility_id && facilities.find(f => f.id === formData.facility_id)?.status !== 'approved' && (
+                  <p className="text-sm text-amber-600">This facility is pending approval</p>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="title">Slot Title *</Label>
               <Input
                 id="title"
                 value={formData.title}
@@ -329,19 +399,21 @@ export const SlotCreationForm = ({ onSlotCreated }: SlotCreationFormProps) => {
             />
           </div>
 
-          <Button type="submit" disabled={loading} className="w-full">
-            {loading ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                Creating Slot...
-              </>
-            ) : (
-              <>
-                <Plus className="w-4 h-4 mr-2" />
-                Create Slot
-              </>
-            )}
-          </Button>
+              <Button type="submit" disabled={loading || !formData.facility_id} className="w-full">
+                {loading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Creating Slot...
+                  </>
+                ) : (
+                  <>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create Slot
+                  </>
+                )}
+              </Button>
+            </>
+          )}
         </form>
       </CardContent>
     </Card>
