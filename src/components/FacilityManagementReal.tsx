@@ -44,11 +44,6 @@ interface Slot {
   compliance_level: string;
   is_available: boolean;
   facility_id: string;
-  bookings?: Array<{
-    id: string;
-    status: string;
-    buyer_id: string;
-  }>;
 }
 
 export const FacilityManagementReal = () => {
@@ -92,14 +87,7 @@ export const FacilityManagementReal = () => {
         const facilityIds = data.map(f => f.id);
         const { data: slotsData, error: slotsError } = await supabase
           .from('slots')
-          .select(`
-            *,
-            bookings (
-              id,
-              status,
-              buyer_id
-            )
-          `)
+          .select(`*`)
           .in('facility_id', facilityIds)
           .order('start_date', { ascending: true });
 
@@ -407,11 +395,11 @@ export const FacilityManagementReal = () => {
                                   <div className="text-sm text-muted-foreground">{slot.equipment}</div>
                                 </div>
                                 <Badge className={
-                                  slot.bookings && slot.bookings.length > 0 
+                                  !slot.is_available 
                                     ? 'status-bullish' 
                                     : 'bg-gray-500/10 text-gray-400 border-gray-500/30'
                                 }>
-                                  {slot.bookings && slot.bookings.length > 0 ? 'Booked' : 'Available'}
+                                  {!slot.is_available ? 'Booked' : 'Available'}
                                 </Badge>
                               </div>
                               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm mt-3">

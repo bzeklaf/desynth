@@ -52,14 +52,7 @@ export const FacilityDashboard = () => {
         const facilityIds = facilities.map(f => f.id);
         const { data, error } = await supabase
           .from('slots')
-          .select(`
-            *,
-            bookings (
-              id,
-              buyer_id,
-              status
-            )
-          `)
+          .select('*')
           .in('facility_id', facilityIds)
           .order('start_date', { ascending: true });
 
@@ -267,9 +260,9 @@ export const FacilityDashboard = () => {
                           <p className="text-muted-foreground">{slot.equipment}</p>
                         </div>
                         <Badge className={
-                          slot.bookings && slot.bookings.length > 0 ? 'status-bullish' : 'bg-gray-500/10 text-gray-400 border-gray-500/30'
+                          !slot.is_available ? 'status-bullish' : 'bg-gray-500/10 text-gray-400 border-gray-500/30'
                         }>
-                          {slot.bookings && slot.bookings.length > 0 ? 'booked' : 'available'}
+                          {!slot.is_available ? 'booked' : 'available'}
                         </Badge>
                       </div>
                     </CardHeader>
@@ -292,9 +285,9 @@ export const FacilityDashboard = () => {
                           <div className="font-semibold">{slot.compliance_level.toUpperCase()}</div>
                         </div>
                         <div>
-                          <div className="text-muted-foreground">Buyer</div>
+                          <div className="text-muted-foreground">Status</div>
                           <div className="font-semibold">
-                            {slot.bookings && slot.bookings.length > 0 ? 'Booked' : 'Available'}
+                            {slot.is_available ? 'Available' : 'Booked'}
                           </div>
                         </div>
                       </div>
@@ -302,7 +295,7 @@ export const FacilityDashboard = () => {
                         <Button variant="outline" size="sm">
                           Edit Slot
                         </Button>
-                        {(!slot.bookings || slot.bookings.length === 0) && (
+                        {slot.is_available && (
                           <Button variant="outline" size="sm">
                             Delete Slot
                           </Button>
