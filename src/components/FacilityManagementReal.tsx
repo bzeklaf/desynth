@@ -34,11 +34,30 @@ interface Facility {
   created_at: string;
 }
 
+interface Slot {
+  id: string;
+  title: string;
+  equipment: string;
+  start_date: string;
+  end_date: string;
+  price: number;
+  compliance_level: string;
+  is_available: boolean;
+  facility_id: string;
+  bookings?: Array<{
+    id: string;
+    status: string;
+    buyer_id: string;
+  }>;
+}
+
 export const FacilityManagementReal = () => {
   const [facilities, setFacilities] = useState<Facility[]>([]);
+  const [facilitySlots, setFacilitySlots] = useState<Record<string, Slot[]>>({});
   const [loading, setLoading] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingFacility, setEditingFacility] = useState<Facility | null>(null);
+  const [expandedFacility, setExpandedFacility] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     location: '',
@@ -67,6 +86,39 @@ export const FacilityManagementReal = () => {
 
       if (error) throw error;
       setFacilities(data || []);
+      
+      // Fetch slots for each facility
+      if (data && data.length > 0) {
+        const facilityIds = data.map(f => f.id);
+        const { data: slotsData, error: slotsError } = await supabase
+          .from('slots')
+          .select(`
+            *,
+            bookings (
+              id,
+              status,
+              buyer_id
+            )
+          `)
+          .in('facility_id', facilityIds)
+          .order('start_date', { ascending: true });
+
+        if (slotsError) throw slotsError;
+        
+        // Group slots by facility
+        const slotsByFacility: Record<string, Slot[]> = {};
+        facilityIds.forEach(id => {
+          slotsByFacility[id] = [];
+        });
+        
+        slotsData?.forEach(slot => {
+          if (slotsByFacility[slot.facility_id]) {
+            slotsByFacility[slot.facility_id].push(slot);
+          }
+        });
+        
+        setFacilitySlots(slotsByFacility);
+      }
     } catch (error) {
       console.error('Error fetching facilities:', error);
       toast({
@@ -318,9 +370,13 @@ export const FacilityManagementReal = () => {
                       <Edit className="w-4 h-4 mr-1" />
                       Edit
                     </Button>
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setExpandedFacility(expandedFacility === facility.id ? null : facility.id)}
+                    >
                       <Eye className="w-4 h-4 mr-1" />
-                      View Details
+                      {expandedFacility === facility.id ? 'Hide' : 'View'} Slots ({facilitySlots[facility.id]?.length || 0})
                     </Button>
                     {facility.status === 'pending' && (
                       <Button 
@@ -334,6 +390,54 @@ export const FacilityManagementReal = () => {
                       </Button>
                     )}
                   </div>
+
+                  {/* Slots Section */}
+                  {expandedFacility === facility.id && (
+                    <div className="mt-6 pt-6 border-t border-border">
+                      <h4 className="font-semibold mb-4">Slots for this Facility</h4>
+                      {facilitySlots[facility.id]?.length === 0 ? (
+                        <p className="text-muted-foreground text-sm">No slots created yet for this facility.</p>
+                      ) : (
+                        <div className="space-y-3">
+                          {facilitySlots[facility.id]?.map(slot => (
+                            <div key={slot.id} className="p-4 rounded-lg bg-background/50 border border-border">
+                              <div className="flex items-start justify-between mb-2">
+                                <div>
+                                  <div className="font-medium">{slot.title}</div>
+                                  <div className="text-sm text-muted-foreground">{slot.equipment}</div>
+                                </div>
+                                <Badge className={
+                                  slot.bookings && slot.bookings.length > 0 
+                                    ? 'status-bullish' 
+                                    : 'bg-gray-500/10 text-gray-400 border-gray-500/30'
+                                }>
+                                  {slot.bookings && slot.bookings.length > 0 ? 'Booked' : 'Available'}
+                                </Badge>
+                              </div>
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm mt-3">
+                                <div>
+                                  <div className="text-muted-foreground">Start Date</div>
+                                  <div className="font-medium">{new Date(slot.start_date).toLocaleDateString()}</div>
+                                </div>
+                                <div>
+                                  <div className="text-muted-foreground">End Date</div>
+                                  <div className="font-medium">{new Date(slot.end_date).toLocaleDateString()}</div>
+                                </div>
+                                <div>
+                                  <div className="text-muted-foreground">Price</div>
+                                  <div className="font-medium text-primary">${slot.price.toLocaleString()}</div>
+                                </div>
+                                <div>
+                                  <div className="text-muted-foreground">Compliance</div>
+                                  <div className="font-medium">{slot.compliance_level.toUpperCase()}</div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
