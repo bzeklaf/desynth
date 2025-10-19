@@ -35,8 +35,8 @@ export const FacilityDashboard = () => {
   const { user } = useAuth();
 
   useEffect(() => {
-    fetchSlots();
-  }, []);
+    if (user) fetchSlots();
+  }, [user]);
 
   const fetchSlots = async () => {
     if (!user) return;
