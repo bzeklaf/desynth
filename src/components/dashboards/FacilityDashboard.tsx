@@ -509,7 +509,7 @@ export const FacilityDashboard = () => {
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm">Payout Method</span>
-                    <span className="font-semibold">Bank Transfer</span>
+                    <span className="font-semibold">Credit Card</span>
                   </div>
                   <Button className="w-full mt-4">
                     Update Payout Method

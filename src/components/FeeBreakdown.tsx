@@ -6,7 +6,7 @@ import { FeeBreakdown as FeeBreakdownType } from '@/lib/pricing';
 
 interface FeeBreakdownProps {
   fees: FeeBreakdownType;
-  paymentMethod: 'credit-card' | 'crypto' | 'bank-transfer';
+  paymentMethod: 'credit-card' | 'crypto';
   showDetails?: boolean;
 }
 
@@ -19,8 +19,6 @@ export const FeeBreakdown = ({ fees, paymentMethod, showDetails = true }: FeeBre
         return <Badge variant="outline" className="text-purple-400 border-purple-400"><Coins className="w-3 h-3 mr-1" />Crypto</Badge>;
       case 'credit-card':
         return <Badge variant="outline" className="text-blue-400 border-blue-400"><DollarSign className="w-3 h-3 mr-1" />Card</Badge>;
-      case 'bank-transfer':
-        return <Badge variant="outline" className="text-green-400 border-green-400"><Clock className="w-3 h-3 mr-1" />Bank</Badge>;
     }
   };
 

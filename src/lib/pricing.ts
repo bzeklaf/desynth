@@ -13,7 +13,7 @@ export interface BookingContext {
   facilityType: FacilityType;
   transactionSize: number;
   isPriority?: boolean;
-  paymentMethod: 'credit-card' | 'crypto' | 'bank-transfer';
+  paymentMethod: 'credit-card' | 'crypto';
 }
 
 export interface FeeBreakdown {

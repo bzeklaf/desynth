@@ -74,7 +74,7 @@ interface BookingDetails {
   project_description: string;
   compliance_requirements: string[];
   timeline_flexibility: 'strict' | 'flexible' | 'very_flexible';
-  payment_method: 'credit-card' | 'crypto' | 'bank-transfer';
+  payment_method: 'credit-card' | 'crypto';
   booking_vertical: 'cdmo' | 'sequencing' | 'cloud_lab' | 'fermentation' | 'academic';
   facility_type: 'bioprocessing' | 'cell_culture' | 'analytical' | 'formulation' | 'manufacturing';
   is_priority: boolean;
@@ -249,22 +249,6 @@ export const SlotBookingFlow = ({ slotId, slotData, onClose }: SlotBookingFlowPr
         toast({
           title: "Crypto Payment Initiated",
           description: "Escrow created successfully. Your booking is now secured.",
-        });
-      } else {
-        // Bank transfer - just update status
-        await supabase
-          .from('bookings')
-          .update({ 
-            payment_status: 'pending_transfer',
-            payment_method: 'bank-transfer',
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', bookingId);
-
-        setStep('confirmation');
-        toast({
-          title: "Bank Transfer Instructions",
-          description: "Please complete the bank transfer as instructed.",
         });
       }
     } catch (error) {
@@ -442,7 +426,7 @@ export const SlotBookingFlow = ({ slotId, slotData, onClose }: SlotBookingFlowPr
                         <Label>Payment Method</Label>
                         <RadioGroup
                           value={booking.payment_method}
-                          onValueChange={(value: 'credit-card' | 'crypto' | 'bank-transfer') => 
+                          onValueChange={(value: 'credit-card' | 'crypto') => 
                             setBooking(prev => ({ ...prev, payment_method: value }))
                           }
                           className="grid grid-cols-1 gap-3 mt-2"
@@ -460,13 +444,6 @@ export const SlotBookingFlow = ({ slotId, slotData, onClose }: SlotBookingFlowPr
                               <Coins className="h-4 w-4" />
                               Crypto (USDC)
                               <Badge variant="secondary" className="text-xs">Escrow + NFT</Badge>
-                            </Label>
-                          </div>
-                          <div className="flex items-center space-x-2 border rounded-lg p-3">
-                            <RadioGroupItem value="bank-transfer" id="bank-transfer" />
-                            <Label htmlFor="bank-transfer" className="flex items-center gap-2 cursor-pointer">
-                              <Shield className="h-4 w-4" />
-                              Bank Transfer
                             </Label>
                           </div>
                         </RadioGroup>

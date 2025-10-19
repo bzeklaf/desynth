@@ -131,7 +131,7 @@ export const CryptoBookingFlow = ({
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="text-sm text-muted-foreground">
-                    Pay with credit card or bank transfer through our secure payment processor.
+                    Pay with credit card through our secure payment processor.
                   </div>
                   
                   <div className="bg-muted/50 p-4 rounded-lg">
