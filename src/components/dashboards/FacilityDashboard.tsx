@@ -57,11 +57,7 @@ export const FacilityDashboard = () => {
             bookings (
               id,
               buyer_id,
-              status,
-              profiles:buyer_id (
-                first_name,
-                last_name
-              )
+              status
             )
           `)
           .in('facility_id', facilityIds)
@@ -298,10 +294,7 @@ export const FacilityDashboard = () => {
                         <div>
                           <div className="text-muted-foreground">Buyer</div>
                           <div className="font-semibold">
-                            {slot.bookings && slot.bookings.length > 0 && slot.bookings[0].profiles
-                              ? `${slot.bookings[0].profiles.first_name} ${slot.bookings[0].profiles.last_name}`
-                              : 'Available'
-                            }
+                            {slot.bookings && slot.bookings.length > 0 ? 'Booked' : 'Available'}
                           </div>
                         </div>
                       </div>
