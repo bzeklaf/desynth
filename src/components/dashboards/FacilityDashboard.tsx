@@ -49,6 +49,7 @@ export const FacilityDashboard = () => {
         .eq('owner_user_id', user.id);
 
       if (facilities && facilities.length > 0) {
+        const facilityIds = facilities.map(f => f.id);
         const { data, error } = await supabase
           .from('slots')
           .select(`
@@ -63,7 +64,7 @@ export const FacilityDashboard = () => {
               )
             )
           `)
-          .eq('facility_id', facilities[0].id)
+          .in('facility_id', facilityIds)
           .order('start_date', { ascending: true });
 
         if (error) throw error;
