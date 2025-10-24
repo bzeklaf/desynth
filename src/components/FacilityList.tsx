@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Building2, MapPin, Award, Calendar } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Building2, MapPin, Award, Calendar, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 
 interface Facility {
@@ -21,6 +23,7 @@ export const FacilityList = () => {
   const [facilities, setFacilities] = useState<Facility[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchFacilities = async () => {
@@ -44,6 +47,39 @@ export const FacilityList = () => {
 
     fetchFacilities();
   }, [user]);
+
+  const handleDeleteFacility = async (facilityId: string, facilityName: string) => {
+    if (!confirm(`Are you sure you want to delete "${facilityName}"? This will also delete all associated slots. This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const { error } = await supabase
+        .from('facilities')
+        .delete()
+        .eq('id', facilityId);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Facility deleted',
+        description: `${facilityName} was deleted successfully.`,
+      });
+
+      // Remove from state
+      setFacilities(facilities.filter(f => f.id !== facilityId));
+    } catch (error) {
+      console.error('Error deleting facility:', error);
+      toast({
+        title: 'Failed to delete facility',
+        description: 'Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -132,6 +168,18 @@ export const FacilityList = () => {
               <div>
                 Reputation: {facility.reputation_score.toFixed(2)}
               </div>
+            </div>
+            
+            <div className="pt-3 border-t">
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => handleDeleteFacility(facility.id, facility.name)}
+                className="w-full"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Delete Facility
+              </Button>
             </div>
           </CardContent>
         </Card>
