@@ -70,6 +70,38 @@ export const FacilityDashboard = () => {
       setLoading(false);
     }
   };
+  
+  const handleDeleteSlot = async (slotId: string) => {
+    if (!confirm('Are you sure you want to delete this slot? This action cannot be undone.')) {
+      return;
+    }
+    try {
+      setLoading(true);
+      const { error } = await supabase
+        .from('slots')
+        .delete()
+        .eq('id', slotId);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Slot deleted',
+        description: 'The slot was deleted successfully.',
+      });
+
+      // Refresh list
+      fetchSlots();
+    } catch (error) {
+      console.error('Error deleting slot:', error);
+      toast({
+        title: 'Failed to delete slot',
+        description: 'Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const mockSlots = [
     {
@@ -296,7 +328,11 @@ export const FacilityDashboard = () => {
                           Edit Slot
                         </Button>
                         {slot.is_available && (
-                          <Button variant="outline" size="sm">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDeleteSlot(slot.id)}
+                          >
                             Delete Slot
                           </Button>
                         )}
