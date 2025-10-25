@@ -141,6 +141,135 @@ export type Database = {
           },
         ]
       }
+      market_listings: {
+        Row: {
+          created_at: string
+          description: string | null
+          discount_percentage: number | null
+          expires_at: string | null
+          id: string
+          listed_at: string
+          listing_price: number
+          original_booking_id: string | null
+          original_price: number
+          seller_id: string
+          seller_type: string
+          slot_id: string
+          sold_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          discount_percentage?: number | null
+          expires_at?: string | null
+          id?: string
+          listed_at?: string
+          listing_price: number
+          original_booking_id?: string | null
+          original_price: number
+          seller_id: string
+          seller_type: string
+          slot_id: string
+          sold_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          discount_percentage?: number | null
+          expires_at?: string | null
+          id?: string
+          listed_at?: string
+          listing_price?: number
+          original_booking_id?: string | null
+          original_price?: number
+          seller_id?: string
+          seller_type?: string
+          slot_id?: string
+          sold_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "market_listings_original_booking_id_fkey"
+            columns: ["original_booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "market_listings_slot_id_fkey"
+            columns: ["slot_id"]
+            isOneToOne: false
+            referencedRelation: "slots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      market_transactions: {
+        Row: {
+          buyer_id: string
+          created_at: string
+          id: string
+          listing_id: string
+          payment_method: string | null
+          payment_status: string
+          platform_fee: number
+          seller_id: string
+          seller_net_amount: number
+          slot_id: string
+          transaction_amount: number
+          transaction_date: string
+        }
+        Insert: {
+          buyer_id: string
+          created_at?: string
+          id?: string
+          listing_id: string
+          payment_method?: string | null
+          payment_status?: string
+          platform_fee?: number
+          seller_id: string
+          seller_net_amount: number
+          slot_id: string
+          transaction_amount: number
+          transaction_date?: string
+        }
+        Update: {
+          buyer_id?: string
+          created_at?: string
+          id?: string
+          listing_id?: string
+          payment_method?: string | null
+          payment_status?: string
+          platform_fee?: number
+          seller_id?: string
+          seller_net_amount?: number
+          slot_id?: string
+          transaction_amount?: number
+          transaction_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "market_transactions_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "market_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "market_transactions_slot_id_fkey"
+            columns: ["slot_id"]
+            isOneToOne: false
+            referencedRelation: "slots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           action_url: string | null
@@ -334,6 +463,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      expire_old_market_listings: { Args: never; Returns: undefined }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["user_role"]
