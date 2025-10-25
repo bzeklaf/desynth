@@ -41,99 +41,6 @@ interface Slot {
   scale_capacity?: string;
 }
 
-// Mock data for demonstration
-const mockSlots: Slot[] = [
-  {
-    id: 'demo-1',
-    title: 'Premium GMP Vaccine Production',
-    description: 'State-of-the-art facility with automated systems for vaccine production',
-    facility: {
-      name: 'BioPharma Excellence',
-      location: 'Cambridge, MA',
-      reputation_score: 4.9
-    },
-    start_date: '2024-02-15T08:00:00Z',
-    end_date: '2024-02-20T17:00:00Z',
-    duration_hours: 120,
-    price: 250,
-    is_available: true,
-    compliance_level: 'gmp',
-    equipment: 'Automated Bioreactor 2000L',
-    scale_capacity: '1000L - 5000L'
-  },
-  {
-    id: 'demo-2',
-    title: 'Rapid Prototyping Lab Space',
-    description: 'Perfect for early-stage research and development projects',
-    facility: {
-      name: 'Innovation BioCenter',
-      location: 'San Francisco, CA',
-      reputation_score: 4.7
-    },
-    start_date: '2024-01-25T09:00:00Z',
-    end_date: '2024-01-30T18:00:00Z',
-    duration_hours: 96,
-    price: 18000,
-    is_available: true,
-    compliance_level: 'rd',
-    equipment: 'Modular R&D Suite',
-    scale_capacity: '50L - 500L'
-  },
-  {
-    id: 'demo-3',
-    title: 'Clinical Trial Manufacturing',
-    description: 'GCP-compliant facility for clinical phase production',
-    facility: {
-      name: 'ClinTech Solutions',
-      location: 'Basel, Switzerland',
-      reputation_score: 4.8
-    },
-    start_date: '2024-03-01T07:00:00Z',
-    end_date: '2024-03-07T19:00:00Z',
-    duration_hours: 144,
-    price: 52000,
-    is_available: true,
-    compliance_level: 'gcp',
-    equipment: 'Single-Use Bioreactor 1000L',
-    scale_capacity: '500L - 2000L'
-  },
-  {
-    id: 'demo-4',
-    title: 'Advanced Cell Culture System',
-    description: 'Latest technology for advanced cell culture applications',
-    facility: {
-      name: 'NextGen Biologics',
-      location: 'Singapore',
-      reputation_score: 4.6
-    },
-    start_date: '2024-02-05T08:30:00Z',
-    end_date: '2024-02-12T17:30:00Z',
-    duration_hours: 168,
-    price: 38000,
-    is_available: true,
-    compliance_level: 'gmp',
-    equipment: 'Advanced Cell Culture System',
-    scale_capacity: '200L - 1000L'
-  },
-  {
-    id: 'demo-5',
-    title: 'Protein Expression Platform',
-    description: 'High-yield protein production using mammalian cell lines',
-    facility: {
-      name: 'PrecisionBio Labs',
-      location: 'Boston, MA',
-      reputation_score: 4.8
-    },
-    start_date: '2024-01-20T07:00:00Z',
-    end_date: '2024-01-24T19:00:00Z',
-    duration_hours: 80,
-    price: 28000,
-    is_available: true,
-    compliance_level: 'gmp',
-    equipment: 'CHO Expression System',
-    scale_capacity: '100L - 800L'
-  }
-];
 
 export const SlotBrowser = () => {
   const [searchParams] = useSearchParams();
@@ -180,25 +87,19 @@ export const SlotBrowser = () => {
 
       if (error) throw error;
 
-      // If no real data, use mock data for demo
-      if (!data || data.length === 0) {
-        console.log('No database slots found, using mock data for demo');
-        setSlots(mockSlots);
-      } else {
-        const formattedSlots = data?.map(slot => ({
-          ...slot,
-          facility: slot.facilities
-        })) || [];
-        setSlots(formattedSlots);
-      }
+      const formattedSlots = data?.map(slot => ({
+        ...slot,
+        facility: slot.facilities
+      })) || [];
+      setSlots(formattedSlots);
     } catch (error) {
       console.error('Error fetching slots:', error);
-      // Fallback to mock data on error
-      setSlots(mockSlots);
       toast({
-        title: "Using demo data",
-        description: "Real data will be available once facilities create slots.",
+        title: "Error loading slots",
+        description: "Failed to load slot data. Please try again.",
+        variant: "destructive",
       });
+      setSlots([]);
     } finally {
       setLoading(false);
     }
