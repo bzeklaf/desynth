@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -135,6 +136,8 @@ const mockSlots: Slot[] = [
 ];
 
 export const SlotBrowser = () => {
+  const [searchParams] = useSearchParams();
+  const facilityId = searchParams.get('facility');
   const [slots, setSlots] = useState<Slot[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -147,7 +150,7 @@ export const SlotBrowser = () => {
 
   useEffect(() => {
     fetchSlots();
-  }, [complianceFilter]);
+  }, [complianceFilter, facilityId]);
 
   const fetchSlots = async () => {
     try {
@@ -167,6 +170,10 @@ export const SlotBrowser = () => {
 
       if (complianceFilter !== 'all') {
         query = query.eq('compliance_level', complianceFilter as 'basic' | 'gmp' | 'fda' | 'iso');
+      }
+
+      if (facilityId) {
+        query = query.eq('facility_id', facilityId);
       }
 
       const { data, error } = await query;
