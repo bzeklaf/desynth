@@ -13,6 +13,8 @@ import AnalyticsDashboard from '@/components/AnalyticsDashboard';
 import { SlotBookingFlow } from '@/components/SlotBookingFlow';
 import { FloatingChat } from '@/components/FloatingChat';
 import PaymentProcessor from '@/components/PaymentProcessor';
+import { ManageMarketListings } from '@/components/ManageMarketListings';
+import { CreateMarketListing } from '@/components/CreateMarketListing';
 import { 
   Search, 
   Calendar, 
@@ -25,12 +27,14 @@ import {
   Lock,
   RefreshCw,
   DollarSign,
-  BarChart3
+  BarChart3,
+  Store
 } from 'lucide-react';
 
 export const BuyerDashboard = () => {
   const [activeTab, setActiveTab] = useState('browse');
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showListingForm, setShowListingForm] = useState<{ slotId: string; bookingId: string; price: number } | null>(null);
   const [bookings, setBookings] = useState<any[]>([]);
   const [claims, setClaims] = useState<any[]>([]);
   const [resaleListings, setResaleListings] = useState<any[]>([]);
@@ -205,6 +209,20 @@ export const BuyerDashboard = () => {
                           <Eye className="w-4 h-4 mr-1" />
                           View Details
                         </Button>
+                        {booking.status === 'confirmed' && (
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => setShowListingForm({ 
+                              slotId: booking.slot_id, 
+                              bookingId: booking.id,
+                              price: booking.total_amount 
+                            })}
+                          >
+                            <Store className="w-4 h-4 mr-1" />
+                            Resell Slot
+                          </Button>
+                        )}
                         {booking.status === 'reserved' && (
                           <Button variant="outline" size="sm">
                             <RefreshCw className="w-4 h-4 mr-1" />
@@ -280,57 +298,22 @@ export const BuyerDashboard = () => {
           </TabsContent>
 
           <TabsContent value="marketplace" className="space-y-6">
-            <Card className="card-glow">
-              <CardHeader>
-                <CardTitle>Secondary Market</CardTitle>
-                <CardDescription>Purchase claims from other buyers at market rates</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {resaleListings.length === 0 ? (
-                  <div className="text-center py-8">
-                    <TrendingUp className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-                    <h3 className="font-semibold mb-2">No Active Listings</h3>
-                    <p className="text-muted-foreground">
-                      No claims available for purchase in the secondary market
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {resaleListings.map((listing) => (
-                      <div key={listing.id} className="p-4 border border-border rounded-lg">
-                        <div className="flex items-start justify-between mb-3">
-                          <div>
-                            <h4 className="font-semibold">{listing.claims?.bookings?.slots?.title || 'Unknown Slot'}</h4>
-                            <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                              <Star className="w-3 h-3 fill-warning text-warning" />
-                              {listing.claims?.bookings?.slots?.facilities?.reputation_score?.toFixed(1) || '0.0'} • {listing.claims?.bookings?.slots?.facilities?.name || 'Unknown Facility'}
-                            </div>
-                          </div>
-                          <Badge variant="outline">
-                            <Clock className="w-3 h-3 mr-1" />
-                            Active
-                          </Badge>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4 text-sm mb-4">
-                          <div>
-                            <div className="text-muted-foreground">Listing Price</div>
-                            <div className="font-semibold text-primary">${listing.price.toLocaleString()}</div>
-                          </div>
-                          <div>
-                            <div className="text-muted-foreground">Created</div>
-                            <div className="font-semibold">{new Date(listing.created_at).toLocaleDateString()}</div>
-                          </div>
-                        </div>
-                        <Button variant="premium" size="sm">
-                          <Lock className="w-4 h-4 mr-1" />
-                          Purchase Claim
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            {showListingForm && (
+              <CreateMarketListing
+                slotId={showListingForm.slotId}
+                originalPrice={showListingForm.price}
+                bookingId={showListingForm.bookingId}
+                sellerType="buyer"
+                onSuccess={() => {
+                  setShowListingForm(null);
+                  toast({
+                    title: "Success",
+                    description: "Your slot has been listed on the secondary market",
+                  });
+                }}
+              />
+            )}
+            <ManageMarketListings />
           </TabsContent>
 
           <TabsContent value="analytics" className="space-y-6">

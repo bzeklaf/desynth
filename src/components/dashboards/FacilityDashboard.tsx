@@ -10,6 +10,8 @@ import { FacilityManagementReal } from '@/components/FacilityManagementReal';
 import { InventoryManagement } from '@/components/InventoryManagement';
 import { ComplianceTracker } from '@/components/ComplianceTracker';
 import { FloatingChat } from '@/components/FloatingChat';
+import { ManageMarketListings } from '@/components/ManageMarketListings';
+import { CreateMarketListing } from '@/components/CreateMarketListing';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -23,12 +25,14 @@ import {
   DollarSign,
   Users,
   FileText,
-  Award
+  Award,
+  Store
 } from 'lucide-react';
 
 export const FacilityDashboard = () => {
   const [activeTab, setActiveTab] = useState('calendar');
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showListingForm, setShowListingForm] = useState<{ slotId: string; price: number } | null>(null);
   const [slots, setSlots] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
@@ -216,7 +220,7 @@ export const FacilityDashboard = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-7">
+          <TabsList className="grid w-full grid-cols-8">
             <TabsTrigger value="calendar" className="flex items-center gap-2">
               <Calendar className="w-4 h-4" />
               Slot Calendar
@@ -224,6 +228,10 @@ export const FacilityDashboard = () => {
             <TabsTrigger value="runs" className="flex items-center gap-2">
               <Clock className="w-4 h-4" />
               Active Runs
+            </TabsTrigger>
+            <TabsTrigger value="market" className="flex items-center gap-2">
+              <Store className="w-4 h-4" />
+              Market
             </TabsTrigger>
             <TabsTrigger value="inventory" className="flex items-center gap-2">
               <FileText className="w-4 h-4" />
@@ -328,13 +336,23 @@ export const FacilityDashboard = () => {
                           Edit Slot
                         </Button>
                         {slot.is_available && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDeleteSlot(slot.id)}
-                          >
-                            Delete Slot
-                          </Button>
+                          <>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setShowListingForm({ slotId: slot.id, price: slot.price })}
+                            >
+                              <Store className="w-4 h-4 mr-1" />
+                              List on Market
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDeleteSlot(slot.id)}
+                            >
+                              Delete Slot
+                            </Button>
+                          </>
                         )}
                       </div>
                     </CardContent>
@@ -398,6 +416,24 @@ export const FacilityDashboard = () => {
 
           <TabsContent value="inventory">
             <InventoryManagement />
+          </TabsContent>
+
+          <TabsContent value="market" className="space-y-6">
+            {showListingForm && (
+              <CreateMarketListing
+                slotId={showListingForm.slotId}
+                originalPrice={showListingForm.price}
+                sellerType="facility"
+                onSuccess={() => {
+                  setShowListingForm(null);
+                  toast({
+                    title: "Success",
+                    description: "Your slot has been listed on the secondary market",
+                  });
+                }}
+              />
+            )}
+            <ManageMarketListings />
           </TabsContent>
 
           <TabsContent value="compliance">
