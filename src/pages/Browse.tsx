@@ -3,8 +3,47 @@ import { SlotBrowser } from '@/components/SlotBrowser';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Search, TrendingUp, Filter } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 export const Browse = () => {
+  const [stats, setStats] = useState({
+    availableSlots: 0,
+    avgPrice: 0,
+    activeFacilities: 0
+  });
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      // Fetch available slots count and average price
+      const { data: slots } = await supabase
+        .from('slots')
+        .select('price')
+        .eq('is_available', true)
+        .gte('start_date', new Date().toISOString());
+
+      // Fetch active facilities count
+      const { data: facilities } = await supabase
+        .from('facilities')
+        .select('id')
+        .eq('status', 'approved');
+
+      if (slots) {
+        const avgPrice = slots.length > 0 
+          ? slots.reduce((sum, slot) => sum + Number(slot.price), 0) / slots.length 
+          : 0;
+        
+        setStats({
+          availableSlots: slots.length,
+          avgPrice: Math.round(avgPrice),
+          activeFacilities: facilities?.length || 0
+        });
+      }
+    };
+
+    fetchStats();
+  }, []);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-primary/5">
       <Navigation />
@@ -28,7 +67,7 @@ export const Browse = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-muted-foreground">Available Slots</p>
-                    <p className="text-2xl font-bold text-primary">42</p>
+                    <p className="text-2xl font-bold text-primary">{stats.availableSlots}</p>
                   </div>
                   <Badge variant="outline" className="bg-primary/10">
                     <TrendingUp className="w-3 h-3 mr-1" />
@@ -43,7 +82,7 @@ export const Browse = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-muted-foreground">Avg. Price</p>
-                    <p className="text-2xl font-bold text-primary">$8,200</p>
+                    <p className="text-2xl font-bold text-primary">${stats.avgPrice.toLocaleString()}</p>
                   </div>
                   <Badge variant="outline" className="bg-green-500/10 text-green-400">
                     <TrendingUp className="w-3 h-3 mr-1" />
@@ -58,7 +97,7 @@ export const Browse = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-muted-foreground">Active Facilities</p>
-                    <p className="text-2xl font-bold text-primary">18</p>
+                    <p className="text-2xl font-bold text-primary">{stats.activeFacilities}</p>
                   </div>
                   <Badge variant="outline" className="bg-primary/10">
                     <Filter className="w-3 h-3 mr-1" />
